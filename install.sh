@@ -19,10 +19,10 @@ supported_distro( )
   fi
 
   case "${ID}" in
-    ubuntu|centos|rhel|fedora|sles|opensuse-leap)
+    ubuntu|centos|rhel|fedora|sles|opensuse-leap|azurelinux)
         true
         ;;
-    *)  printf "This script is currently supported on Ubuntu, CentOS, RHEL, SLES, OpenSUSE-Leap, and Fedora\n"
+    *)  printf "This script is currently supported on Ubuntu, CentOS, RHEL, SLES, OpenSUSE-Leap, Fedora, and Azure Linux\n"
         exit 2
         ;;
   esac
@@ -137,10 +137,14 @@ install_packages( )
                                       "gcc-c++" "libcxx-devel" )
   local library_dependencies_sles=(   "make" "python3-PyYAML" "python3-virtualenv" "python3-joblib"
                                       "gcc-c++" "libcxxtools9" "rpm-build" )
+  local library_dependencies_fedora=( "make" "rpm-build"
+                                      "python3" "python3-PyYAML" "python3-virtualenv"
+                                      "gcc-c++" "libcxx-devel" )
 
   if [[ "${tensile_msgpack_backend}" == true ]]; then
     library_dependencies_ubuntu+=("libmsgpack-dev")
     library_dependencies_fedora+=("msgpack-devel")
+    library_dependencies_azurelinux+=("msgpack-devel")
   fi
 
   # wget is needed for msgpack in this case
@@ -160,6 +164,7 @@ install_packages( )
       library_dependencies_rhel_9+=("wget" "openssl-devel")
       library_dependencies_fedora+=("wget")
       library_dependencies_sles+=("wget" "libopenssl-devel")
+      library_dependencies_azurelinux+=("wget" "openssl-devel")
     fi
   fi
 
@@ -172,6 +177,7 @@ install_packages( )
     library_dependencies_rhel_9+=( "gcc-gfortran" "libgomp" )
     library_dependencies_fedora+=( "gcc-gfortran" "libgomp" )
     library_dependencies_sles+=( "gcc-fortran" "libgomp1" )
+    library_dependencies_azurelinux+=( "gcc-gfortran" "libgomp" )
 
     # wget is needed for blis
     if [[ ! -e "${build_dir}/deps/blis/lib/libblis.a" ]] && [[ ! -e "/usr/local/lib/libblis.a" ]]; then
@@ -182,6 +188,7 @@ install_packages( )
       library_dependencies_rhel_9+=("wget")
       library_dependencies_fedora+=("wget")
       library_dependencies_sles+=("wget")
+      library_dependencies_azurelinux+=("wget")
     fi
   fi
 
@@ -223,6 +230,11 @@ install_packages( )
     sles|opensuse-leap)
        install_zypper_packages "${library_dependencies_sles[@]}"
         ;;
+
+    azurelinux)
+       install_dnf_packages "${library_dependencies_azurelinux[@]}"
+       ;;
+
     *)
       echo "This script is currently supported on Ubuntu, CentOS, RHEL, SLES, OpenSUSE-Leap, and Fedora"
       exit 2
@@ -552,7 +564,7 @@ if [[ "${install_package}" == true ]]; then
     centos|rhel)
       elevate_if_not_root yum -y localinstall rocblas-*.rpm
     ;;
-    fedora)
+    fedora|azurelinux)
       elevate_if_not_root dnf install rocblas-*.rpm
     ;;
     sles|opensuse-leap)
