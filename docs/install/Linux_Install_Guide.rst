@@ -256,3 +256,18 @@ one of these commands.
 
    "``./install.sh --clients-only``", "Build the rocBLAS clients and use the installed rocBLAS library at ``ROCM_PATH`` (defaults to ``/opt/rocm`` if not specified)."
    "``./install.sh --clients-only --library-path /path/to/rocBLAS``", "Build the rocBLAS clients and use the rocBLAS library at the specified location."
+
+Azure Linux 3.0
+--------------
+
+This fork supports Azure Linux 3.0 in ``install.sh``. Install ROCm before building;
+the script uses ``dnf`` for build dependencies and for installing generated RPMs.
+To build the clients, including ``rocblas-bench``, against an installed rocBLAS RPM:
+
+.. code-block:: shell
+
+   sudo dnf install -y rocblas-devel
+   ./install.sh --dependencies --clients-only
+
+Use matching client and library versions as described above. The client-only build
+does not rebuild or replace the installed rocBLAS library.
